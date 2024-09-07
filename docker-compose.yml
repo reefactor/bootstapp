@@ -1,0 +1,43 @@
+version: "3"
+services:
+
+  frontend:
+    build: ./components/frontend
+    restart: unless-stopped
+    # TODO mount prod SSL serts and bind to default.conf ssl_certificate ssl_certificate_key
+    # volumes:
+    #   - ./ssl.crt:/etc/ssl/certs/frontend.crt;
+    #   - ./ssl.key:/etc/ssl/private/frontend.key;
+    ports:
+      - 8888:80
+      - 8443:443
+    depends_on:
+      - backend
+
+  backend:
+    build: ./components/backend
+    restart: unless-stopped
+    depends_on:
+      - postgresql
+      - redis
+
+  postgresql:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      - POSTGRES_PASSWORD=${DB_PASSWD:-changeme}
+    volumes:
+      - ./postgresql/data:/var/lib/postgresql/data:z
+      # Optional Init script required only for initial setup, can be removed later
+      # - /setup_db_schema.sh:/docker-entrypoint-initdb.d/setup_db_schema.sh:z
+
+  redis:
+    image: redis:6-alpine
+    restart: unless-stopped
+    volumes:
+      - ./redis/data:/data
+    command: >
+      --maxmemory-policy volatile-lru
+      --maxmemory 1000mb
+      --save 60 10
+      --requirepass "${REDIS_PASSWORD:-changeme}"
