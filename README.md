@@ -14,7 +14,7 @@ Update dependency tree [reqirements.txt](components/backend/reqirements.txt.app)
 ```
 make init
 make pip-compile
-``
+```
 
 See services declared in [docker-compose.yml](docker-compose.yml)
 
